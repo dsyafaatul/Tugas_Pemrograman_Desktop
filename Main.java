@@ -1,15 +1,16 @@
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Main
 {
-    private Menu[] menu;
+    private ArrayList<Menu> menu;
     private ArrayList<Pesanan> pesanan = new ArrayList<Pesanan>();
     private Scanner scanner = new Scanner(System.in);
 
     public Main(Menu[] menu)
     {
-        this.menu = menu;
+        this.menu = new ArrayList<Menu>(Arrays.asList(menu));
     }
 
     public static void main(String[] args)
@@ -35,6 +36,7 @@ public class Main
         pesanan.clear();
 
         System.out.println("1. Pesan");
+        System.out.println("2. Manajemen Menu");
         System.out.println("0. Keluar");
 
         System.out.print("Pilih Aksi > ");
@@ -58,9 +60,151 @@ public class Main
             case 1:
                 pemesanan();
                 break;
+            case 2:
+                manajemenMenu();
+                break;
             default:
                 System.out.println("!!!!!!!!!! Pilihan tidak ada !!!!!!!!!!");
                 utama();
+        }
+    }
+
+    public void manajemenMenu()
+    {
+        System.out.println("---------- MANAJEMEN MENU ----------");
+
+        System.out.println("1. Lihat Menu");
+        System.out.println("2. Tambah Menu");
+        System.out.println("3. Hapus Menu");
+        System.out.println("0. Keluar");
+
+        System.out.print("Pilih Aksi > ");
+        int input = 0;
+
+        if(!scanner.hasNextInt()){
+            scanner.nextLine();
+            System.out.println("!!!!!!!!!! Input Salah !!!!!!!!!!");
+            manajemenMenu();
+            return;
+        }
+        input = scanner.nextInt();
+        scanner.nextLine();
+
+        switch(input)
+        {
+            case 0:
+                utama();
+                break;
+            case 1:
+                daftarMenu(0);
+                manajemenMenu();
+                break;
+            case 2:
+                addMenu();
+                break;
+            case 3:
+                deleteMenu();
+                break;
+            default:
+                System.out.println("!!!!!!!!!! Pilihan tidak ada !!!!!!!!!!");
+                manajemenMenu();
+        }
+    }
+
+    public void addMenu()
+    {
+        System.out.println("---------- TAMBAH MENU ----------");
+
+        String nama = "";
+        double harga = 0;
+        String kategori = "";
+
+        System.out.print("Nama Menu > ");
+        if(!scanner.hasNextLine()){
+            System.out.println("!!!!!!!!!! Input Salah !!!!!!!!!!");
+            addMenu();
+            return;
+        }
+        nama = scanner.nextLine();
+        if(nama.isEmpty()){
+            System.out.println("!!!!!!!!!! Nama menu tidak boleh kosong !!!!!!!!!!");
+            addMenu();
+        }
+
+        System.out.print("Harga Menu > ");
+        if(!scanner.hasNextDouble()){
+            System.out.println("!!!!!!!!!! Input Salah !!!!!!!!!!");
+            addMenu();
+            return;
+        }
+        harga = scanner.nextDouble();
+        scanner.nextLine();
+
+        System.out.print("Kategori Menu (Makanan/Minuman) > ");
+        if(!scanner.hasNextLine()){
+            System.out.println("!!!!!!!!!! Input Salah !!!!!!!!!!");
+            addMenu();
+            return;
+        }
+        kategori = scanner.nextLine();
+        if(kategori.isEmpty()){
+            System.out.println("!!!!!!!!!! Kategori menu tidak boleh kosong !!!!!!!!!!");
+            addMenu();
+        }else
+        if(!kategori.equalsIgnoreCase("Makanan") && !kategori.equalsIgnoreCase("Minuman")){
+            System.out.println("!!!!!!!!!! Kategori menu harus Makanan atau Minuman !!!!!!!!!!");
+            addMenu();
+        }else{
+            kategori = kategori.equalsIgnoreCase("Makanan") ? "Makanan" : "Minuman";
+        }
+
+        menu.add(new Menu(nama, harga, kategori));
+        menu = new ArrayList<Menu>(menu.stream().sorted((a, b) -> {
+            if(a.kategori.equals(b.kategori)){
+                return a.nama.compareTo(b.nama);
+            }else{
+                return a.kategori.equals("Makanan") ? -1 : 1;
+            }
+        }).toList());
+        System.out.println("Menu berhasil ditambahkan!");
+        manajemenMenu();
+    }
+
+    public void deleteMenu()
+    {
+        System.out.println("---------- HAPUS MENU ----------");
+
+        daftarMenu(0);
+
+        System.out.print("Pilih Menu (0 untuk batal) > ");
+        int input = 0;
+
+        if(!scanner.hasNextInt()){
+            scanner.nextLine();
+            System.out.println("!!!!!!!!!! Input Salah !!!!!!!!!!");
+            deleteMenu();
+            return;
+        }
+        input = scanner.nextInt();
+        scanner.nextLine();
+
+        if(input == 0){
+            manajemenMenu();
+        }else
+        if(input >= 1 && input <= menu.size()){
+            menu.remove(input - 1);
+            menu = new ArrayList<Menu>(menu.stream().sorted((a, b) -> {
+                if(a.kategori.equals(b.kategori)){
+                    return a.nama.compareTo(b.nama);
+                }else{
+                    return a.kategori.equals("Makanan") ? -1 : 1;
+                }
+            }).toList());
+            System.out.println("Menu berhasil dihapus!");
+            manajemenMenu();
+        }else{
+            System.out.println("!!!!!!!!!! Pilihan tidak ada !!!!!!!!!!");
+            deleteMenu();
         }
     }
 
@@ -70,7 +214,7 @@ public class Main
 
         if(pesanan.size() > 0) daftarPesanan(0);
 
-        if(pesanan.size() < 4) daftarMenu(0);
+        daftarMenu(0);
 
         if(pesanan.size() > 0) System.out.println("99. Bayar");
 
@@ -92,8 +236,8 @@ public class Main
         if(pesanan.size() > 0 && input == 99){
             bayar();
         }else
-        if(pesanan.size() < 4 && input >= 1 && input <= menu.length){
-            addPesanan(menu[input - 1]);
+        if(input >= 1 && input <= menu.size()){
+            addPesanan(menu.get(input - 1));
         }else{
             System.out.println("!!!!!!!!!! Pilihan tidak ada !!!!!!!!!!");
             pemesanan();
@@ -175,9 +319,9 @@ public class Main
     public void daftarMenu(int start)
     {
         if(start == 0) System.out.println("\n## DAFTAR MENU ##");
-        if(start >= 0 && start < menu.length){
-            if(start == 0 || (start > 0 && menu[start - 1].kategori != menu[start].kategori)) System.out.println("# " + menu[start].kategori);
-            System.out.printf("%-2d. %-20s - %,-10.0f\n", start + 1, menu[start].nama, menu[start].harga);
+        if(start >= 0 && start < menu.size()){
+            if(start == 0 || (start > 0 && menu.get(start - 1).kategori != menu.get(start).kategori)) System.out.println("# " + menu.get(start).kategori);
+            System.out.printf("%-2d. %-20s - %,-10.0f\n", start + 1, menu.get(start).nama, menu.get(start).harga);
             daftarMenu(start + 1);
         }
     }
